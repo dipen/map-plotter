@@ -4,6 +4,22 @@ import folium
 from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
+import subprocess
+
+def get_git_commit_info():
+    try:
+        commit_hash = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode("utf-8").strip()
+        commit_msg = subprocess.check_output(["git", "log", "-1", "--pretty=%B"]).decode("utf-8").strip()
+        return commit_hash, commit_msg
+    except Exception:
+        return None, None
+
+commit_hash, commit_msg = get_git_commit_info()
+
+if commit_hash and commit_msg:
+    st.markdown(f"**Version:** `{commit_hash}`<br>**Message:** {commit_msg}", unsafe_allow_html=True)
+else:
+    st.markdown("**Version information not available.**")
 
 st.title("City Asset Mapper")
 
