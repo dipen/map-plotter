@@ -33,7 +33,7 @@ if uploaded_file:
         geocode = RateLimiter(geolocator.geocode, min_delay_seconds=1)
         
         def get_lat_lon(row):
-            location = geocode(f"{row['city']}, {row['state']}")
+            location = geocode(f"{row['city']}, {row['state']}, India")
             if location:
                 return pd.Series([location.latitude, location.longitude])
             else:
@@ -44,18 +44,35 @@ if uploaded_file:
         df = df.dropna(subset=['lat', 'lon'])
         
         if not df.empty:
-            center = [df['lat'].mean(), df['lon'].mean()]
-            m = folium.Map(location=center, zoom_start=5)
+            # India bounds: approx lat 8-37, lon 68-97
+            india_center = [22.5937, 78.9629]
+            india_bounds = [[8, 68], [37, 97]]
+            m = folium.Map(
+                location=india_center,
+                zoom_start=5,
+                min_zoom=4,
+                max_zoom=8,
+                max_bounds=True,
+                dragging=False,
+            )
+            m.fit_bounds(india_bounds)
+            
+            min_radius = 5
+            max_radius = 16   # biggest dot is not too big
+            max_count = df['count'].max()
             for _, row in df.iterrows():
+                # Scale radius between min_radius and max_radius
+                radius = min_radius + (max_radius - min_radius) * (row['count'] / max_count)
                 folium.CircleMarker(
                     location=[row['lat'], row['lon']],
-                    radius=max(5, min(15, row['count']/10)),
+                    radius=radius,
                     popup=f"{row['city']}, {row['state']}: {row['count']}",
                     color='blue',
                     fill=True,
                     fill_color='blue'
                 ).add_to(m)
             st.subheader("Asset Map")
-            st_folium(m, width=700, height=500)
+            # Make map viewport bigger for better visibility
+            st_folium(m, width=1000, height=700)
         else:
             st.warning("No valid city locations found in your data.")
