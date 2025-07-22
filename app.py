@@ -21,11 +21,11 @@ if commit_hash and commit_msg:
 else:
     st.markdown("**Version information not available.**")
 
-st.title("City Asset Mapper")
+st.title("Asset Location Mapper")
 
 st.markdown("""
 Upload an Excel file with the following columns:
-- **state**: State name
+- **state**: State name (Redundant)
 - **city**: City name
 - **count**: Number of assets in that city
 """)
